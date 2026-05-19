@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Service {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  leads     Lead[]
+  providers Provider[] @relation("ServiceProviders")
+  createdAt DateTime   @default(now())
+}
+
+model Provider {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique
+  leadsCount     Int              @default(0)
+  maxQuota       Int              @default(10)
+  lastAssignedAt DateTime         @default(now())
+  assignments    LeadAssignment[]
+  services       Service[]        @relation("ServiceProviders")
+  createdAt      DateTime         @default(now())
+}
+
+model Lead {
+  id          Int              @id @default(autoincrement())
+  name        String
+  phone       String
+  serviceId   Int
+  service     Service          @relation(fields: [serviceId], references: [id])
+  assignments LeadAssignment[]
+  createdAt   DateTime         @default(now())
+
+  @@unique([phone, serviceId]) // FR-1: Duplicate prevention
+}
+
+model LeadAssignment {
+  id          Int      @id @default(autoincrement())
+  leadId      Int
+  providerId  Int
+  isMandatory Boolean  @default(false)
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([leadId, providerId]) // Fail-safe: prevents duplicate assignment
+}
+
+model WebhookLog {
+  id        Int      @id @default(autoincrement())
+  eventId   String   @unique // FR-5: Idempotency key
+  payload   Json
+  createdAt DateTime @default(now())
+}
