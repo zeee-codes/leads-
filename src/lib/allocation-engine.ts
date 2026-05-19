@@ -6,6 +6,8 @@ export interface AllocationResult {
   leadId: number;
   name: string;
   phone: string;
+  city: string;
+  description: string;
   serviceId: number;
   assignments: LeadAssignmentResponse[];
 }
@@ -18,6 +20,8 @@ export interface AllocationResult {
 export async function allocateLead(
   name: string,
   phone: string,
+  city: string,
+  description: string,
   serviceId: number
 ): Promise<AllocationResult> {
   return await prisma.$transaction(async (tx) => {
@@ -131,6 +135,8 @@ export async function allocateLead(
       data: {
         name,
         phone,
+        city,
+        description,
         serviceId,
       },
     });
@@ -158,6 +164,8 @@ export async function allocateLead(
       leadId: lead.id,
       name: lead.name,
       phone: lead.phone,
+      city: lead.city,
+      description: lead.description,
       serviceId: lead.serviceId,
       assignments: selectedProviders,
     };

@@ -31,13 +31,13 @@ async function main() {
   console.log("Seeding Providers...");
   const providersData = [
     { id: 1, name: "Provider 1", serviceIds: [1, 3] },
-    { id: 2, name: "Provider 2", serviceIds: [1] },
-    { id: 3, name: "Provider 3", serviceIds: [1] },
-    { id: 4, name: "Provider 4", serviceIds: [2, 3] },
-    { id: 5, name: "Provider 5", serviceIds: [2] },
-    { id: 6, name: "Provider 6", serviceIds: [2] },
-    { id: 7, name: "Provider 7", serviceIds: [3] },
-    { id: 8, name: "Provider 8", serviceIds: [3] },
+    { id: 2, name: "Provider 2", serviceIds: [1, 3] },
+    { id: 3, name: "Provider 3", serviceIds: [1, 3] },
+    { id: 4, name: "Provider 4", serviceIds: [1, 3] },
+    { id: 5, name: "Provider 5", serviceIds: [2, 3] },
+    { id: 6, name: "Provider 6", serviceIds: [2, 3] },
+    { id: 7, name: "Provider 7", serviceIds: [2, 3] },
+    { id: 8, name: "Provider 8", serviceIds: [2, 3] },
   ];
 
   for (const prov of providersData) {

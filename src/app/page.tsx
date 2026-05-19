@@ -7,6 +7,8 @@ import { LeadSuccessResponse } from "@/types";
 export default function LeadIntakePage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [description, setDescription] = useState("");
   const [serviceId, setServiceId] = useState("1");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<LeadSuccessResponse["data"] | null>(null);
@@ -22,6 +24,14 @@ export default function LeadIntakePage() {
       toast.error("Please enter your phone number.");
       return;
     }
+    if (!city.trim()) {
+      toast.error("Please enter your city.");
+      return;
+    }
+    if (!description.trim()) {
+      toast.error("Please enter a description.");
+      return;
+    }
 
     setIsLoading(true);
     setResult(null);
@@ -35,6 +45,8 @@ export default function LeadIntakePage() {
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim(),
+          city: city.trim(),
+          description: description.trim(),
           serviceId: Number(serviceId),
         }),
       });
@@ -50,6 +62,8 @@ export default function LeadIntakePage() {
       // Reset form on success
       setName("");
       setPhone("");
+      setCity("");
+      setDescription("");
     } catch (err: any) {
       toast.error(err.message || "Failed to process request.");
     } finally {
@@ -69,11 +83,11 @@ export default function LeadIntakePage() {
       </div>
 
       <div className="glass-panel p-6 sm:p-8 rounded-2xl">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Service Selector */}
           <div>
             <label htmlFor="service" className="block text-sm font-semibold text-slate-300 mb-2">
-              Select Service Category
+              Select Service Category (Dropdown)
             </label>
             <select
               id="service"
@@ -90,35 +104,69 @@ export default function LeadIntakePage() {
             </p>
           </div>
 
-          {/* Full Name */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Full Name */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-semibold text-slate-300 mb-2">
+                Full Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                placeholder="e.g. John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={isLoading}
+                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
+              />
+            </div>
+
+            {/* Phone Number */}
+            <div>
+              <label htmlFor="phone" className="block text-sm font-semibold text-slate-300 mb-2">
+                Phone Number
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                placeholder="e.g. +1 555-0199"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={isLoading}
+                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
+              />
+            </div>
+          </div>
+
+          {/* City */}
           <div>
-            <label htmlFor="name" className="block text-sm font-semibold text-slate-300 mb-2">
-              Full Name
+            <label htmlFor="city" className="block text-sm font-semibold text-slate-300 mb-2">
+              City
             </label>
             <input
-              id="name"
+              id="city"
               type="text"
-              placeholder="e.g. John Doe"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. New York"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
               disabled={isLoading}
               className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
             />
           </div>
 
-          {/* Phone Number */}
+          {/* Description */}
           <div>
-            <label htmlFor="phone" className="block text-sm font-semibold text-slate-300 mb-2">
-              Phone Number
+            <label htmlFor="description" className="block text-sm font-semibold text-slate-300 mb-2">
+              Description
             </label>
-            <input
-              id="phone"
-              type="tel"
-              placeholder="e.g. +1 555-0199"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+            <textarea
+              id="description"
+              placeholder="Describe your service needs..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               disabled={isLoading}
-              className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
+              rows={3}
+              className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50 resize-none"
             />
           </div>
 
@@ -151,13 +199,17 @@ export default function LeadIntakePage() {
             </h3>
             
             <div className="bg-slate-950/50 rounded-xl p-4 border border-white/5 space-y-3">
-              <div className="grid grid-cols-2 text-xs gap-y-1 text-slate-400">
+              <div className="grid grid-cols-2 text-xs gap-y-1.5 text-slate-400">
                 <span>Request ID:</span>
                 <span className="font-semibold text-slate-200"># {result.leadId}</span>
                 <span>Customer:</span>
                 <span className="font-semibold text-slate-200">{result.name}</span>
                 <span>Phone:</span>
                 <span className="font-semibold text-slate-200">{result.phone}</span>
+                <span>City:</span>
+                <span className="font-semibold text-slate-200">{result.city}</span>
+                <span>Description:</span>
+                <span className="font-semibold text-slate-200 break-words">{result.description}</span>
                 <span>Service Category:</span>
                 <span className="font-semibold text-slate-200">Service {result.serviceId}</span>
               </div>

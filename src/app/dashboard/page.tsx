@@ -3,6 +3,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import toast from "react-hot-toast";
 
+interface LeadItem {
+  leadId: number;
+  name: string;
+  phone: string;
+  city: string;
+  description: string;
+  serviceName: string;
+  isMandatory: boolean;
+  createdAt: string;
+}
+
 interface ProviderStats {
   id: number;
   name: string;
@@ -11,6 +22,7 @@ interface ProviderStats {
   lastAssignedAt: string;
   isFrozen: boolean;
   services: string[];
+  leadsList: LeadItem[];
 }
 
 interface Assignment {
@@ -18,6 +30,8 @@ interface Assignment {
   leadId: number;
   leadName: string;
   leadPhone: string;
+  leadCity?: string;
+  leadDescription?: string;
   serviceName: string;
   providerId: number;
   providerName: string;
@@ -167,11 +181,12 @@ export default function ProviderDashboardPage() {
               const isFlashing = flashingProviders[provider.id];
               const isFull = provider.isFrozen;
               const percent = Math.min((provider.leadsCount / provider.maxQuota) * 100, 100);
+              const remainingQuota = provider.maxQuota - provider.leadsCount;
               
               return (
                 <div
                   key={provider.id}
-                  className={`glass-panel p-5 rounded-2xl relative overflow-hidden transition-all flex flex-col justify-between h-48 border border-white/5 ${
+                  className={`glass-panel p-5 rounded-2xl relative overflow-hidden transition-all flex flex-col justify-between border border-white/5 min-h-[360px] ${
                     isFlashing ? "animate-flash-green" : ""
                   }`}
                 >
@@ -206,7 +221,7 @@ export default function ProviderDashboardPage() {
                   </div>
 
                   {/* Quota Progress Bar */}
-                  <div className="my-4">
+                  <div className="my-3">
                     <div className="flex items-center justify-between text-xs mb-1.5">
                       <span className="text-slate-400">Quota Usage:</span>
                       <span className={`font-semibold ${isFull ? "text-red-400" : "text-slate-200"}`}>
@@ -225,10 +240,45 @@ export default function ProviderDashboardPage() {
                         style={{ width: `${percent}%` }}
                       ></div>
                     </div>
+                    
+                    {/* Remaining Quota & Leads Count Info */}
+                    <div className="flex items-center justify-between text-[11px] mt-2 text-slate-400">
+                      <span>Leads Received: <strong className="text-slate-200">{provider.leadsCount}</strong></span>
+                      <span>Remaining Quota: <strong className={remainingQuota <= 2 ? "text-amber-400 font-bold" : "text-slate-200 font-bold"}>{remainingQuota}</strong></span>
+                    </div>
+                  </div>
+
+                  {/* Assigned Leads List */}
+                  <div className="mt-2 border-t border-white/5 pt-2.5 flex-1 flex flex-col min-h-[120px]">
+                    <span className="text-[10px] font-bold text-indigo-400 block mb-1">Assigned Leads List:</span>
+                    {provider.leadsList.length === 0 ? (
+                      <span className="text-[10px] text-slate-500 block italic my-auto">No leads assigned yet.</span>
+                    ) : (
+                      <div className="overflow-y-auto max-h-[110px] space-y-1.5 pr-0.5 scrollbar-thin">
+                        {provider.leadsList.map((lead) => (
+                          <div
+                            key={lead.leadId}
+                            className="text-[10px] bg-slate-950/40 p-2 rounded border border-white/5 space-y-1"
+                          >
+                            <div className="flex justify-between items-center text-slate-200 font-medium">
+                              <span>#{lead.leadId} {lead.name}</span>
+                              <span className="text-[8px] text-slate-500">{new Date(lead.createdAt).toLocaleTimeString()}</span>
+                            </div>
+                            <div className="grid grid-cols-2 text-[9px] text-slate-400 gap-y-0.5">
+                              <span>City: <strong className="text-slate-300">{lead.city}</strong></span>
+                              <span>Phone: <strong className="text-slate-300 font-mono">{lead.phone}</strong></span>
+                            </div>
+                            <div className="text-slate-400 italic text-[9px] line-clamp-1 border-t border-white/5 pt-1 mt-0.5">
+                              "{lead.description}"
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Bottom Stats inside Card */}
-                  <div className="border-t border-white/5 pt-3 mt-auto flex items-center justify-between text-[11px] text-slate-500">
+                  <div className="border-t border-white/5 pt-2.5 mt-2 flex items-center justify-between text-[10px] text-slate-500">
                     <span>ID: #{provider.id}</span>
                     <span>
                       Last Assigned:{" "}
@@ -285,11 +335,21 @@ export default function ProviderDashboardPage() {
                     </div>
 
                     {/* Assignment Body */}
-                    <div className="text-xs">
+                    <div className="text-xs space-y-1">
                       <p className="text-slate-300">
                         Lead <span className="font-semibold text-slate-200">#{assignment.leadId}</span> (
                         {assignment.leadName}) for <span className="text-slate-200 font-semibold">{assignment.serviceName}</span>
                       </p>
+                      {assignment.leadCity && (
+                        <p className="text-[10px] text-slate-400">
+                          City: <strong className="text-slate-300">{assignment.leadCity}</strong>
+                        </p>
+                      )}
+                      {assignment.leadDescription && (
+                        <p className="text-[10px] text-slate-400 italic line-clamp-1">
+                          "{assignment.leadDescription}"
+                        </p>
+                      )}
                       <p className="text-slate-400 mt-1 flex items-center gap-1">
                         Assigned to:
                         <span className="font-bold text-emerald-400">{assignment.providerName}</span>

@@ -1,6 +1,8 @@
 export interface LeadRequest {
   name: string;
   phone: string;
+  city: string;
+  description: string;
   serviceId: number;
 }
 
@@ -16,6 +18,8 @@ export interface LeadSuccessResponse {
     leadId: number;
     name: string;
     phone: string;
+    city: string;
+    description: string;
     serviceId: number;
     assignments: LeadAssignmentResponse[];
   };

@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, phone, serviceId } = body;
+    const { name, phone, city, description, serviceId } = body;
 
     // Validation checks
     if (!name || typeof name !== "string" || name.trim() === "") {
@@ -42,6 +42,28 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!city || typeof city !== "string" || city.trim() === "") {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "VALIDATION_ERROR",
+          message: "A valid non-empty 'city' string is required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!description || typeof description !== "string" || description.trim() === "") {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "VALIDATION_ERROR",
+          message: "A valid non-empty 'description' string is required.",
+        },
+        { status: 400 }
+      );
+    }
+
     const parsedServiceId = Number(serviceId);
     if (isNaN(parsedServiceId) || parsedServiceId < 1 || parsedServiceId > 3) {
       return NextResponse.json(
@@ -54,7 +76,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await allocateLead(name.trim(), phone.trim(), parsedServiceId);
+    const result = await allocateLead(
+      name.trim(),
+      phone.trim(),
+      city.trim(),
+      description.trim(),
+      parsedServiceId
+    );
 
     return NextResponse.json(
       {

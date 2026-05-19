@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       const phone = `+1555${timestamp}${i}`;
 
       try {
-        const result = await allocateLead(name, phone, parsedServiceId);
+        const result = await allocateLead(name, phone, "Test City", "Test Description", parsedServiceId);
         
         // Format allocation assignment log
         const assignmentsStr = result.assignments

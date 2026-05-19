@@ -225,6 +225,139 @@ export default function TestToolsPage() {
     setTerminalLogs(["[System] Terminal Logs Cleared."]);
   };
 
+  const handleQuickGenerate10 = async () => {
+    setIsGenerating(true);
+    setTerminalLogs((prev) => [
+      ...prev,
+      `[System] Starting concurrency stress test: generating 10 leads for Service 1...`,
+    ]);
+    try {
+      const response = await fetch("/api/test/generate-leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          count: 10,
+          serviceId: 1,
+        }),
+      });
+      const resJson = await response.json();
+      if (!response.ok || !resJson.success) {
+        throw new Error(resJson.message || "Failed to generate leads.");
+      }
+      setTerminalLogs((prev) => [...prev, ...resJson.data.logs, `[System] Quick concurrency generation completed.`]);
+      toast.success("Generated 10 leads successfully!");
+      fetchSnapshot();
+    } catch (err: any) {
+      setTerminalLogs((prev) => [
+        ...prev,
+        `[Error] Quick generation failed: ${err.message}`,
+      ]);
+      toast.error(err.message || "Failed to generate leads.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleQuickResetQuota = async () => {
+    const eventId = `evt_pay_quick_${Math.random().toString(16).substring(2, 10)}`;
+    setTerminalLogs((prev) => [
+      ...prev,
+      `[Webhook Out] Quick Reset Quota request for Provider 1:`,
+      `  EventID: ${eventId}`,
+      `  ProviderID: 1`,
+    ]);
+    try {
+      const response = await fetch("/api/webhook/payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventId,
+          providerId: 1,
+          action: "RESET_QUOTA",
+        }),
+      });
+      const resJson = await response.json();
+      if (response.ok && resJson.success) {
+        setTerminalLogs((prev) => [
+          ...prev,
+          `[Webhook In] Quota reset processed successfully for Provider 1.`,
+        ]);
+        toast.success("Provider 1 quota reset successfully!");
+        fetchSnapshot();
+      } else {
+        throw new Error(resJson.message || "Failed to deliver webhook.");
+      }
+    } catch (err: any) {
+      setTerminalLogs((prev) => [
+        ...prev,
+        `[Error] Quick Reset Quota webhook failed: ${err.message}`,
+      ]);
+      toast.error(err.message || "Webhook delivery failed.");
+    }
+  };
+
+  const handleQuickTestIdempotency = async () => {
+    const eventId = `evt_pay_idem_${Math.random().toString(16).substring(2, 10)}`;
+    setTerminalLogs((prev) => [
+      ...prev,
+      `[Webhook Out] Triggering 3 simultaneous webhooks with duplicate EventID:`,
+      `  EventID: ${eventId}`,
+      `  ProviderID: 2`,
+      `[System] Dispatching concurrent requests...`,
+    ]);
+
+    try {
+      const requests = Array.from({ length: 3 }).map(async (_, idx) => {
+        try {
+          const res = await fetch("/api/webhook/payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              eventId,
+              providerId: 2,
+              action: "RESET_QUOTA",
+            }),
+          });
+          const data = await res.json();
+          return { index: idx + 1, status: res.status, data };
+        } catch (e: any) {
+          return { index: idx + 1, status: 500, error: e.message };
+        }
+      });
+
+      const results = await Promise.all(requests);
+
+      const logsToAdd: string[] = [];
+      results.forEach((res) => {
+        if (res.error) {
+          logsToAdd.push(`  [Request ${res.index}] Exception: ${res.error}`);
+        } else if (res.data.success) {
+          logsToAdd.push(
+            `  [Request ${res.index}] Response ${res.status}: success=${res.data.success}, code=${res.data.code || "SUCCESS"}, msg="${res.data.message}"`
+          );
+        } else {
+          logsToAdd.push(
+            `  [Request ${res.index}] Response ${res.status}: success=${res.data.success}, code=${res.data.code}, msg="${res.data.message}"`
+          );
+        }
+      });
+
+      setTerminalLogs((prev) => [...prev, ...logsToAdd, `[System] Idempotency test complete.`]);
+      toast.success("Idempotency test delivered!");
+      fetchSnapshot();
+    } catch (err: any) {
+      setTerminalLogs((prev) => [
+        ...prev,
+        `[Error] Idempotency test runner failed: ${err.message}`,
+      ]);
+      toast.error("Runner failed.");
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Title */}
@@ -241,6 +374,42 @@ export default function TestToolsPage() {
         
         {/* Left Column: Form Tools */}
         <div className="lg:col-span-1 space-y-6">
+
+          {/* Quick Verification Scenarios */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/5 space-y-4">
+            <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+              Quick Test Actions
+            </h2>
+            <div className="space-y-2.5">
+              <button
+                onClick={handleQuickGenerate10}
+                disabled={isGenerating || isResetting}
+                className="w-full text-left bg-indigo-950/30 hover:bg-indigo-900/40 border border-indigo-500/20 text-indigo-200 font-semibold py-2.5 px-3 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer"
+              >
+                <span>⚡ Generate 10 Leads Instantly</span>
+                <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded font-mono">Concurrency</span>
+              </button>
+
+              <button
+                onClick={handleQuickResetQuota}
+                disabled={isGenerating || isResetting}
+                className="w-full text-left bg-emerald-950/30 hover:bg-emerald-900/40 border border-emerald-500/20 text-emerald-200 font-semibold py-2.5 px-3 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer"
+              >
+                <span>💳 Reset Quota to 10 (Webhook)</span>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-mono">Reset</span>
+              </button>
+
+              <button
+                onClick={handleQuickTestIdempotency}
+                disabled={isGenerating || isResetting}
+                className="w-full text-left bg-amber-950/30 hover:bg-amber-900/40 border border-amber-500/20 text-amber-200 font-semibold py-2.5 px-3 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer"
+              >
+                <span>🔄 Call Webhook 3x Simultaneously</span>
+                <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded font-mono">Idempotency</span>
+              </button>
+            </div>
+          </div>
           
           {/* Section 1: Lead Generator */}
           <div className="glass-panel p-5 rounded-2xl border border-white/5 space-y-4">

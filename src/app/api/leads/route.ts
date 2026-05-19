@@ -12,6 +12,25 @@ export async function GET() {
             name: true,
           },
         },
+        assignments: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            lead: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+                city: true,
+                description: true,
+                service: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -24,6 +43,8 @@ export async function GET() {
             id: true,
             name: true,
             phone: true,
+            city: true,
+            description: true,
             service: {
               select: {
                 id: true,
@@ -53,12 +74,24 @@ export async function GET() {
             lastAssignedAt: p.lastAssignedAt,
             isFrozen: p.leadsCount >= p.maxQuota,
             services: p.services.map((s) => s.name),
+            leadsList: p.assignments.map((a) => ({
+              leadId: a.lead.id,
+              name: a.lead.name,
+              phone: a.lead.phone,
+              city: a.lead.city,
+              description: a.lead.description,
+              serviceName: a.lead.service.name,
+              isMandatory: a.isMandatory,
+              createdAt: a.createdAt,
+            })),
           })),
           assignments: assignments.map((a) => ({
             id: a.id,
             leadId: a.leadId,
             leadName: a.lead.name,
             leadPhone: a.lead.phone,
+            leadCity: a.lead.city,
+            leadDescription: a.lead.description,
             serviceName: a.lead.service.name,
             providerId: a.providerId,
             providerName: a.provider.name,
