@@ -7,9 +7,9 @@ This guide describes how to deploy the Prowider B2B Lead Distribution Engine to 
 ## 📦 Setup & Prerequisites
 
 1. **GitHub Repository**: Make sure your local codebase is pushed to a remote GitHub repository.
-2. **Neon Connection String**: Ensure you have the database connection string. The active pooled connection string configured in `.env` is:
+2. **Neon Connection String**: Ensure you have the database connection string. The connection string format is:
    ```
-   postgresql://neondb_owner:npg_19KGlkqDxvgI@ep-super-union-ap3aw336-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require
+   postgresql://<username>:<password>@<host>/<database>?sslmode=require
    ```
 
 ---
@@ -31,7 +31,7 @@ Add the following key-value pairs in the **Environment Variables** section:
 
 | Key | Value | Notes |
 |---|---|---|
-| `DATABASE_URL` | `postgresql://neondb_owner:npg_19KGlkqDxvgI@ep-super-union-ap3aw336-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require` | The primary connection string for queries and migrations. |
+| `DATABASE_URL` | `postgresql://<username>:<password>@<host>/<database>?sslmode=require` | The primary connection string for queries and migrations. |
 
 ### 4. Click Deploy
 * Click **Deploy**. Vercel will build the application, run type-checking, generate the Prisma Client, and deploy the serverless functions.
